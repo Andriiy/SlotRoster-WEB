@@ -5,10 +5,11 @@ import { getCurrentUser } from '@/lib/auth/middleware';
 // PUT - Update air club
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
+    const params = await context.params;
     
     // Get current user for authentication
     const user = await getCurrentUser();
@@ -62,10 +63,11 @@ export async function PUT(
 // DELETE - Delete air club
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient();
+    const params = await context.params;
     
     // Get current user for authentication
     const user = await getCurrentUser();
