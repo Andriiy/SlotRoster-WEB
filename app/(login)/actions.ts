@@ -390,7 +390,7 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'http://localhost:3000/auth/callback',
+        redirectTo: 'https://www.slotroster.com/auth/callback',
         queryParams: {
           prompt: 'select_account',
           access_type: 'offline',

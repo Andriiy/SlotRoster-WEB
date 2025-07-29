@@ -6,13 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Plane, Users, Calendar, Shield, ArrowRight, Star, Phone, Mail, MapPin, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUserClient, signOutClient, getSessionClient, supabase } from '@/lib/auth-client';
 
 export default function LandingPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function checkUser() {
@@ -20,6 +21,8 @@ export default function LandingPage() {
         setLoading(true);
         
         console.log('Checking user authentication...');
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', Object.fromEntries(searchParams.entries()));
         
         // Check both user and session to ensure we have complete auth state
         const [userData, sessionData] = await Promise.all([
@@ -64,7 +67,7 @@ export default function LandingPage() {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   async function handleSignOut() {
     try {
