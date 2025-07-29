@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
- 
+import LandingPage from './landing/page';
+
 export default function HomePage() {
-  // Redirect to the landing page as the first page
-  redirect('/landing');
+  return <LandingPage />;
 } 
