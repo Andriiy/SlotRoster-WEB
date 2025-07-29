@@ -1,26 +1,26 @@
 # Next.js SaaS Starter
 
-This is a starter template for building a SaaS application using **Next.js** with support for authentication, Stripe integration for payments, and a dashboard for logged-in users.
+
 
 **Demo: [https://next-saas-start.vercel.app/](https://next-saas-start.vercel.app/)**
 
 ## Features
 
-- Marketing landing page (`/`) with animated Terminal element
+- Marketing landing page (`/`) with flight club dashboard
 - Pricing page (`/pricing`) which connects to Stripe Checkout
-- Dashboard pages with CRUD operations on users/teams
+- Dashboard pages with CRUD operations on users/flying communities
 - Basic RBAC with Owner and Member roles
 - Subscription management with Stripe Customer Portal
 - Email/password authentication with JWTs stored to cookies
 - Global middleware to protect logged-in routes
 - Local middleware to protect Server Actions or validate Zod schemas
-- Activity logging system for any user events
+
 
 ## Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
 - **Database**: [Postgres](https://www.postgresql.org/)
-- **ORM**: [Drizzle](https://orm.drizzle.team/)
+- **Authentication**: [Supabase Auth](https://supabase.com/auth)
 - **Payments**: [Stripe](https://stripe.com/)
 - **UI Library**: [shadcn/ui](https://ui.shadcn.com/)
 
@@ -40,25 +40,17 @@ pnpm install
 stripe login
 ```
 
-Use the included setup script to create your `.env` file:
+Create your `.env.local` file with the following environment variables:
 
 ```bash
-pnpm db:setup
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+BASE_URL=http://localhost:3000
 ```
 
-Run the database migrations and seed the database with a default user and team:
-
-```bash
-pnpm db:migrate
-pnpm db:seed
-```
-
-This will create the following user and team:
-
-- User: `test@test.com`
-- Password: `admin123`
-
-You can also create new users through the `/sign-up` route.
+You can create new users through the `/sign-up` route.
 
 Finally, run the Next.js development server:
 
@@ -106,7 +98,8 @@ In your Vercel project settings (or during deployment), add all the necessary en
 2. `STRIPE_SECRET_KEY`: Use your Stripe secret key for the production environment.
 3. `STRIPE_WEBHOOK_SECRET`: Use the webhook secret from the production webhook you created in step 1.
 4. `POSTGRES_URL`: Set this to your production database URL.
-5. `AUTH_SECRET`: Set this to a random string. `openssl rand -base64 32` will generate one.
+5. `NEXT_PUBLIC_SUPABASE_URL`: Set this to your Supabase project URL.
+6. `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Set this to your Supabase anonymous key.
 
 ## Other Templates
 
