@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
   const errorDescription = searchParams.get('error_description');
   const next = searchParams.get('next') ?? '/dashboard';
 
+  console.log('OAuth callback received:', { code: !!code, error, next });
+
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription);
@@ -20,12 +22,20 @@ export async function GET(request: NextRequest) {
     // Exchange the code for a session
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     
+    console.log('OAuth exchange result:', { 
+      hasUser: !!data?.user, 
+      hasSession: !!data?.session, 
+      error: exchangeError?.message 
+    });
+    
     if (exchangeError) {
       console.error('OAuth callback error:', exchangeError);
       return NextResponse.redirect(new URL('/sign-in?error=oauth_error', request.url));
     }
 
     if (data.user) {
+      console.log('User authenticated:', data.user.email);
+      
       // Check if user has a profile, if not create one
       const { data: profile } = await supabase
         .from('profiles')
@@ -34,6 +44,7 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (!profile) {
+        console.log('Creating profile for OAuth user:', data.user.email);
         // For OAuth users, we need to handle the air_club_id requirement
         // Let's create a default air club for OAuth users or handle this differently
         try {
@@ -57,17 +68,23 @@ export async function GET(request: NextRequest) {
               console.error('air_club_id is required - redirecting to setup');
               return NextResponse.redirect(new URL('/dashboard?setup=required', request.url));
             }
+          } else {
+            console.log('Profile created successfully for OAuth user');
           }
         } catch (error) {
           console.error('Unexpected error creating profile:', error);
         }
+      } else {
+        console.log('Profile already exists for user');
       }
     }
 
+    console.log('Redirecting to:', next);
     // Redirect to the intended destination
     return NextResponse.redirect(new URL(next, request.url));
   }
 
+  console.log('No code provided, redirecting to sign-in');
   // If no code, redirect to sign-in
   return NextResponse.redirect(new URL('/sign-in', request.url));
 } 

@@ -19,6 +19,8 @@ export default function LandingPage() {
       try {
         setLoading(true);
         
+        console.log('Checking user authentication...');
+        
         // Check both user and session to ensure we have complete auth state
         const [userData, sessionData] = await Promise.all([
           getCurrentUserClient(),
@@ -85,6 +87,8 @@ export default function LandingPage() {
       </div>
     );
   }
+
+  console.log('Rendering landing page with user:', user);
 
   return (
     <div className="min-h-screen bg-background">
