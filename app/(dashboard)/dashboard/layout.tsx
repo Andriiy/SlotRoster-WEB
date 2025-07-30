@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Menu, Package, User } from 'lucide-react';
+import { Users, Settings, Shield, Menu, Package, User, Building2 } from 'lucide-react';
 
 export default function DashboardLayout({
   children
@@ -21,6 +21,7 @@ export default function DashboardLayout({
 
   const navItems = [
     { href: '/dashboard', icon: Users, label: 'Home' },
+    { href: '/dashboard/club', icon: Building2, label: 'Club' },
     { href: '/dashboard/products', icon: Package, label: 'Products' },
     { href: '/dashboard/account-settings', icon: User, label: 'Account Settings' }
   ];
