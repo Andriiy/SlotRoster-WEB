@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
+import GoogleTagManager from '@/components/GoogleTagManager';
 
 export const metadata: Metadata = {
   title: 'Flight Club Management',
@@ -24,6 +25,7 @@ export default function RootLayout({
       className={`bg-background text-foreground ${manrope.className}`}
     >
       <body className="min-h-[100dvh] bg-background">
+        <GoogleTagManager />
         {children}
       </body>
     </html>
