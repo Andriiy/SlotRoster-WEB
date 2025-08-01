@@ -2,27 +2,27 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-4">
+    <div className="container">
+      <div className="content">
+        <h1 className="title">
           SlotRoster
         </h1>
-        <p className="text-muted-foreground mb-8">
+        <p className="subtitle">
           Flight Club Management Platform
         </p>
-        <div className="space-x-4">
-          <Link 
+        <div className="buttons">
+          <a 
             href="/sign-in" 
-            className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90"
+            className="button primary"
           >
             Sign In
-          </Link>
-          <Link 
+          </a>
+          <a 
             href="/sign-up" 
-            className="inline-block bg-secondary text-secondary-foreground px-6 py-3 rounded-lg hover:bg-secondary/90"
+            className="button secondary"
           >
             Sign Up
-          </Link>
+          </a>
         </div>
       </div>
     </div>
