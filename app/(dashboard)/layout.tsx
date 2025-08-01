@@ -15,6 +15,7 @@ import { signOut } from '@/app/(login)/actions';
 import { useRouter } from 'next/navigation';
 import { User } from '@/lib/auth/middleware';
 import useSWR, { mutate } from 'swr';
+import { AirClubProvider } from '@/lib/contexts/AirClubContext';
 
 // Utility function to clear all SWR caches
 function clearAllCaches() {
@@ -36,7 +37,8 @@ function clearAllCaches() {
 
 // Brute force function to clear everything
 function bruteForceRefresh() {
-  
+  // Only run on client side
+  if (typeof window === 'undefined') return;
   
   // Clear all SWR caches
   clearAllCaches();
@@ -51,7 +53,9 @@ function bruteForceRefresh() {
   });
   
   // Force a complete page reload with cache bypass
-  window.location.href = window.location.origin + '?refresh=' + Date.now();
+  // Use a client-side only approach to prevent hydration issues
+  const timestamp = Date.now();
+  window.location.href = window.location.origin + '?refresh=' + timestamp;
 }
 
 const fetcher = async (url: string) => {
@@ -129,7 +133,7 @@ function UserMenu() {
     return (
       <>
         <Link
-          href="/pricing"
+          href="/dashboard/products"
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           Pricing
@@ -147,7 +151,7 @@ function UserMenu() {
     return (
       <>
         <Link
-          href="/pricing"
+          href="/dashboard/products"
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           Pricing
@@ -217,7 +221,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {children}
+        <AirClubProvider>
+          {children}
+        </AirClubProvider>
       </main>
     </div>
   );

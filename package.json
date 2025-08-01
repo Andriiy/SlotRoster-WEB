@@ -3,7 +3,14 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "setup-stripe": "node scripts/setup-stripe-products.js",
+    "test-stripe": "node scripts/test-stripe-api.js",
+    "update-single-aircraft": "node scripts/update-single-aircraft.js",
+    "debug-products": "node scripts/debug-products.js",
+    "test-subscription": "node scripts/test-subscription.js",
+    "verify-subscription": "node scripts/verify-subscription.js"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.12",

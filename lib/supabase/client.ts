@@ -66,6 +66,11 @@ export interface Database {
           stripe_product_id: string | null;
           plan_name: string | null;
           subscription_status: string | null;
+          trial_start_date: string | null;
+          trial_end_date: string | null;
+          is_trial_active: boolean;
+          trial_plan_name: string | null;
+          trial_aircraft_limit: number;
           created_at: string;
         };
         Insert: {
@@ -83,6 +88,11 @@ export interface Database {
           stripe_product_id?: string | null;
           plan_name?: string | null;
           subscription_status?: string | null;
+          trial_start_date?: string | null;
+          trial_end_date?: string | null;
+          is_trial_active?: boolean;
+          trial_plan_name?: string | null;
+          trial_aircraft_limit?: number;
           created_at?: string;
         };
         Update: {
@@ -100,6 +110,11 @@ export interface Database {
           stripe_product_id?: string | null;
           plan_name?: string | null;
           subscription_status?: string | null;
+          trial_start_date?: string | null;
+          trial_end_date?: string | null;
+          is_trial_active?: boolean;
+          trial_plan_name?: string | null;
+          trial_aircraft_limit?: number;
           created_at?: string;
         };
       };
