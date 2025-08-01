@@ -7,11 +7,27 @@ import { Check, Plane, Users, Calendar, Shield, ArrowRight, Star, Phone, Mail, M
 import Link from 'next/link';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCurrentUserClient, signOutClient, getSessionClient, supabase } from '@/lib/auth-client';
+
+// Import auth functions with error handling
+let getCurrentUserClient: any = null;
+let getSessionClient: any = null;
+let signOutClient: any = null;
+let supabase: any = null;
+
+try {
+  const authClient = require('@/lib/auth-client');
+  getCurrentUserClient = authClient.getCurrentUserClient;
+  getSessionClient = authClient.getSessionClient;
+  signOutClient = authClient.signOutClient;
+  supabase = authClient.supabase;
+} catch (error) {
+  console.error('Failed to load auth client:', error);
+}
 
 function LandingPageContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -19,6 +35,14 @@ function LandingPageContent() {
     async function checkUser() {
       try {
         setLoading(true);
+        setError(null);
+        
+        // Only proceed if auth functions are available
+        if (!getCurrentUserClient || !getSessionClient) {
+          console.error('Auth functions not available');
+          setUser(null);
+          return;
+        }
         
         console.log('Checking user authentication...');
         // Only log window.location on client side to prevent hydration issues
@@ -47,6 +71,7 @@ function LandingPageContent() {
         }
       } catch (error) {
         console.error('Error checking user:', error);
+        setError('Failed to check authentication');
         setUser(null);
       } finally {
         setLoading(false);
@@ -55,31 +80,51 @@ function LandingPageContent() {
 
     checkUser();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: any) => {
-        console.log('Auth state changed:', event, session);
-        if (session?.user) {
-          console.log('Setting user from auth state change:', session.user);
-          setUser(session.user);
-        } else {
-          console.log('Clearing user from auth state change');
-          setUser(null);
+    // Listen for auth state changes only if supabase is available
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event: string, session: any) => {
+          console.log('Auth state changed:', event, session);
+          if (session?.user) {
+            console.log('Setting user from auth state change:', session.user);
+            setUser(session.user);
+          } else {
+            console.log('Clearing user from auth state change');
+            setUser(null);
+          }
         }
-      }
-    );
+      );
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    }
   }, [searchParams]);
 
   async function handleSignOut() {
     try {
-      await signOutClient();
+      if (signOutClient) {
+        await signOutClient();
+      }
       setUser(null);
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
+      setError('Failed to sign out');
     }
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Show loading state while checking authentication
