@@ -1,11 +1,12 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    ppr: true,
-    clientSegmentCache: true,
-    nodeMiddleware: true
-  }
+  // Remove experimental features that might cause issues
+  // experimental: {
+  //   ppr: true,
+  //   clientSegmentCache: true,
+  //   nodeMiddleware: true
+  // }
 };
 
 export default nextConfig;
