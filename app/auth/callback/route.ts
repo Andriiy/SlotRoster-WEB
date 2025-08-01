@@ -2,30 +2,32 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
-  const next = searchParams.get('next') || '/dashboard';
-
-  // Log the callback request for debugging
-  console.log('OAuth callback received:', {
-    url: request.url,
-    code: code ? 'present' : 'missing',
-    error: error || 'none',
-    next
-  });
-
-  if (error) {
-    console.error('OAuth error:', error, searchParams.get('error_description'));
-    return NextResponse.redirect(new URL('/sign-in?error=oauth_error', request.url));
-  }
-
-  if (!code) {
-    console.error('No OAuth code received');
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
-
   try {
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
+    const next = searchParams.get('next') || '/dashboard';
+
+    // Log the callback request for debugging
+    console.log('OAuth callback received:', {
+      url: request.url,
+      code: code ? 'present' : 'missing',
+      error: error || 'none',
+      next
+    });
+
+    // Handle OAuth errors
+    if (error) {
+      console.error('OAuth error:', error, searchParams.get('error_description'));
+      return NextResponse.redirect(new URL('/sign-in?error=oauth_error', request.url));
+    }
+
+    // Handle missing OAuth code (direct access to callback)
+    if (!code) {
+      console.error('No OAuth code received - redirecting to home');
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
     const supabase = await createClient();
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -87,6 +89,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(next, request.url));
   } catch (error) {
     console.error('Unexpected error in OAuth callback:', error);
-    return NextResponse.redirect(new URL('/sign-in?error=unexpected_error', request.url));
+    // Return a proper error response instead of redirecting
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 

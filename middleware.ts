@@ -6,6 +6,12 @@ const protectedRoutes = ['/dashboard'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  
+  // Skip middleware for auth callback and API routes
+  if (pathname.startsWith('/auth/callback') || pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+  
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   // Create a response object that we can modify
