@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import ClientOnly from './ClientOnly';
 
 // Dynamically import GTM with no SSR to prevent hydration errors
 const GoogleTagManager = dynamic(() => import('@/components/GoogleTagManager'), {
@@ -9,5 +10,9 @@ const GoogleTagManager = dynamic(() => import('@/components/GoogleTagManager'), 
 });
 
 export default function GTMWrapper() {
-  return <GoogleTagManager />;
+  return (
+    <ClientOnly>
+      <GoogleTagManager />
+    </ClientOnly>
+  );
 } 

@@ -14,10 +14,14 @@ export default function GoogleTagManager() {
   const gtmId = 'GTM-TZT6ZFSS';
   const scriptRef = useRef<HTMLScriptElement | null>(null);
   const noscriptRef = useRef<HTMLIFrameElement | null>(null);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
     // Only run on client side after component mounts
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isInitialized.current) return;
+
+    // Prevent multiple initializations
+    isInitialized.current = true;
 
     // Initialize dataLayer
     window.dataLayer = window.dataLayer || [];
@@ -52,6 +56,7 @@ export default function GoogleTagManager() {
 
     // Store references for cleanup
     scriptRef.current = script;
+    noscriptRef.current = iframe;
 
     // Cleanup function
     return () => {
@@ -61,6 +66,7 @@ export default function GoogleTagManager() {
       if (noscript && noscript.parentNode) {
         noscript.parentNode.removeChild(noscript);
       }
+      isInitialized.current = false;
     };
   }, []);
 

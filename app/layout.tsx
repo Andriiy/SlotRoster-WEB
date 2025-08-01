@@ -23,6 +23,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`bg-background text-foreground ${manrope.className}`}
+      suppressHydrationWarning
     >
       <body className="min-h-[100dvh] bg-background">
         <GTMWrapper />
