@@ -20,6 +20,9 @@ export async function createCheckoutSession({
     redirect(`/sign-up?redirect=checkout&priceId=${priceId}`);
   }
 
+  // Use fallback BASE_URL if not set
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3002';
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
@@ -29,17 +32,53 @@ export async function createCheckoutSession({
       }
     ],
     mode: 'subscription',
-    success_url: `${process.env.BASE_URL}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.BASE_URL}/pricing`,
+    success_url: `${baseUrl}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/dashboard/products`,
     customer: airClub.stripe_customer_id || undefined,
     client_reference_id: user.id,
-    allow_promotion_codes: true,
-    subscription_data: {
-      trial_period_days: 14
-    }
+    allow_promotion_codes: true
   });
 
   redirect(session.url!);
+}
+
+export async function createCheckoutSessionURL({
+  airClub,
+  priceId,
+  metadata
+}: {
+  airClub: any | null;
+  priceId: string;
+  metadata?: Record<string, string>;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!airClub || !user) {
+    throw new Error('User or air club not found');
+  }
+
+  // Use fallback BASE_URL if not set
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price: priceId,
+        quantity: 1
+      }
+    ],
+    mode: 'subscription',
+    success_url: `${baseUrl}/api/stripe/checkout?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/dashboard/products`,
+    customer: airClub.stripe_customer_id || undefined,
+    client_reference_id: user.id,
+    allow_promotion_codes: true,
+    metadata: metadata || {}
+  });
+
+  return session;
 }
 
 export async function createCustomerPortalSession(airClub: any) {
@@ -105,7 +144,7 @@ export async function createCustomerPortalSession(airClub: any) {
 
   return stripe.billingPortal.sessions.create({
     customer: airClub.stripe_customer_id,
-    return_url: `${process.env.BASE_URL}/dashboard`,
+    return_url: `${process.env.BASE_URL || 'http://localhost:3002'}/dashboard`,
     configuration: configuration.id
   });
 }
@@ -159,4 +198,124 @@ export async function getStripeProducts() {
   });
 
   return products.data;
+}
+
+// Trial management functions
+export async function startFreeTrial(airClubId: string, planName: string, aircraftLimit: number = 999) {
+  const supabase = await createClient();
+  
+  const trialStartDate = new Date();
+  const trialEndDate = new Date();
+  trialEndDate.setMonth(trialEndDate.getMonth() + 1); // 1 month trial
+  
+  const { data, error } = await supabase
+    .from('air_club')
+    .update({
+      trial_start_date: trialStartDate.toISOString(),
+      trial_end_date: trialEndDate.toISOString(),
+      is_trial_active: true,
+      trial_plan_name: planName,
+      trial_aircraft_limit: aircraftLimit, // Allow unlimited aircraft during trial
+      subscription_status: 'trialing'
+    })
+    .eq('id', airClubId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error starting free trial:', error);
+    throw error;
+  }
+  
+  return data;
+}
+
+export async function checkTrialStatus(airClubId: string) {
+  const supabase = await createClient();
+  
+  const { data: airClub, error } = await supabase
+    .from('air_club')
+    .select('*')
+    .eq('id', airClubId)
+    .single();
+    
+  if (error || !airClub) {
+    throw new Error('Air club not found');
+  }
+  
+  // Check if trial has expired
+  if (airClub.is_trial_active && airClub.trial_end_date) {
+    const trialEndDate = new Date(airClub.trial_end_date);
+    const now = new Date();
+    
+    if (now > trialEndDate) {
+      // Trial has expired, update status
+      await supabase
+        .from('air_club')
+        .update({
+          is_trial_active: false,
+          subscription_status: 'inactive'
+        })
+        .eq('id', airClubId);
+        
+      return {
+        ...airClub,
+        is_trial_active: false,
+        subscription_status: 'inactive'
+      };
+    }
+  }
+  
+  return airClub;
+}
+
+export async function getTrialDaysRemaining(airClubId: string) {
+  const airClub = await checkTrialStatus(airClubId);
+  
+  if (!airClub.is_trial_active || !airClub.trial_end_date) {
+    return 0;
+  }
+  
+  const trialEndDate = new Date(airClub.trial_end_date);
+  const now = new Date();
+  const diffTime = trialEndDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return Math.max(0, diffDays);
+}
+
+export async function canAddAircraft(airClubId: string) {
+  const supabase = await createClient();
+  const airClub = await checkTrialStatus(airClubId);
+  
+  // If on trial, allow unlimited aircraft
+  if (airClub.is_trial_active) {
+    return true; // Unlimited aircraft during trial
+  }
+  
+  // If paid subscription, check based on plan
+  const aircraftLimit = getAircraftLimitForPlan(airClub.plan_name);
+  const { data: aircraftCount } = await supabase
+    .from('aircrafts')
+    .select('id', { count: 'exact' })
+    .eq('air_club_id', airClubId);
+    
+  return (aircraftCount?.length || 0) < aircraftLimit;
+}
+
+function getAircraftLimitForPlan(planName: string | null): number {
+  switch (planName) {
+    case 'Single Aircraft':
+      return 1;
+    case 'Small Fleet':
+      return 3;
+    case 'Medium Fleet':
+      return 5;
+    case 'Large Fleet':
+      return 7;
+    case 'Unlimited':
+      return 999; // Unlimited
+    default:
+      return 1;
+  }
 }

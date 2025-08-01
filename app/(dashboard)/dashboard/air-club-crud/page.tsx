@@ -74,6 +74,9 @@ export default function AirClubCRUDPage() {
 
   // Check URL parameters for create mode
   useEffect(() => {
+    // Only run on client side to prevent hydration issues
+    if (typeof window === 'undefined') return;
+    
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
     if (mode === 'create') {

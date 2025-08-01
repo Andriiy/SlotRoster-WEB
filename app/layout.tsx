@@ -1,7 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
-import GTMWrapper from '@/components/GTMWrapper';
 
 export const metadata: Metadata = {
   title: 'Flight Club Management',
@@ -23,9 +22,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`bg-background text-foreground ${manrope.className}`}
+      suppressHydrationWarning={true}
     >
       <body className="min-h-[100dvh] bg-background">
-        <GTMWrapper />
         {children}
       </body>
     </html>
