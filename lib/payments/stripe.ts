@@ -20,8 +20,8 @@ export async function createCheckoutSession({
     redirect(`/sign-up?redirect=checkout&priceId=${priceId}`);
   }
 
-  // Use fallback BASE_URL if not set
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3002';
+  // Use production URL for slotroster.com
+  const baseUrl = process.env.BASE_URL || 'https://slotroster.com';
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -58,8 +58,8 @@ export async function createCheckoutSessionURL({
     throw new Error('User or air club not found');
   }
 
-  // Use fallback BASE_URL if not set
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  // Use production URL for slotroster.com
+  const baseUrl = process.env.BASE_URL || 'https://slotroster.com';
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -144,7 +144,7 @@ export async function createCustomerPortalSession(airClub: any) {
 
   return stripe.billingPortal.sessions.create({
     customer: airClub.stripe_customer_id,
-    return_url: `${process.env.BASE_URL || 'http://localhost:3002'}/dashboard`,
+    return_url: `${process.env.BASE_URL || 'https://slotroster.com'}/dashboard`,
     configuration: configuration.id
   });
 }
