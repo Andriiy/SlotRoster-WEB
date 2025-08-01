@@ -4,70 +4,166 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Plane, Users, Calendar, Shield } from 'lucide-react';
-import { getStripeProducts, getStripePrices } from '@/lib/payments/stripe';
+import { Check, Star, Plane, Users, Calendar, Shield, Crown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAirClub } from '@/lib/contexts/AirClubContext';
 
-interface StripeProduct {
+interface PricingPlan {
   id: string;
   name: string;
-  description: string | null;
-  active: boolean;
-  metadata: Record<string, string>;
-  created: number;
+  price: string;
+  description: string;
+  features: string[];
+  aircraftLimit: number;
+  popular?: boolean;
+  trialDays: number;
 }
 
-interface StripePrice {
-  id: string;
-  product: string;
-  active: boolean;
-  currency: string;
-  unit_amount: number | null;
-  recurring: {
-    interval: string;
-    interval_count: number;
-  } | null;
-  metadata: Record<string, string>;
-}
-
-interface ProductWithPricing {
-  product: StripeProduct;
-  prices: StripePrice[];
-}
+const predefinedPlans: PricingPlan[] = [
+  {
+    id: 'single-aircraft',
+    name: 'Single Aircraft',
+    price: '€5',
+    description: 'Perfect for individual pilots or small operations',
+    features: [
+      '1 Aircraft Management',
+      'Basic Scheduling',
+      'Member Management',
+      'Email Support',
+      '1 Month Free Trial'
+    ],
+    aircraftLimit: 1,
+    trialDays: 30
+  },
+  {
+    id: 'small-fleet',
+    name: 'Small Fleet',
+    price: '€15',
+    description: 'Ideal for small flying clubs and schools',
+    features: [
+      '3 Aircraft Management',
+      'Advanced Scheduling',
+      'Member Management',
+      'Priority Support',
+      '1 Month Free Trial'
+    ],
+    aircraftLimit: 3,
+    popular: true,
+    trialDays: 30
+  },
+  {
+    id: 'medium-fleet',
+    name: 'Medium Fleet',
+    price: '€25',
+    description: 'Perfect for growing aviation businesses',
+    features: [
+      '5 Aircraft Management',
+      'Advanced Scheduling',
+      'Member Management',
+      'Priority Support',
+      '1 Month Free Trial'
+    ],
+    aircraftLimit: 5,
+    trialDays: 30
+  },
+  {
+    id: 'large-fleet',
+    name: 'Large Fleet',
+    price: '€35',
+    description: 'For established aviation operations',
+    features: [
+      '7 Aircraft Management',
+      'Advanced Scheduling',
+      'Member Management',
+      'Priority Support',
+      '1 Month Free Trial'
+    ],
+    aircraftLimit: 7,
+    trialDays: 30
+  },
+  {
+    id: 'unlimited',
+    name: 'Unlimited',
+    price: '€50',
+    description: 'For large aviation organizations',
+    features: [
+      'Unlimited Aircraft',
+      'Advanced Scheduling',
+      'Member Management',
+      'Priority Support',
+      '1 Month Free Trial'
+    ],
+    aircraftLimit: 999,
+    trialDays: 30
+  }
+];
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<ProductWithPricing[]>([]);
+  const router = useRouter();
+  const { selectedAirClub } = useAirClub();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [stripeProducts, setStripeProducts] = useState<any[]>([]);
+  const [useStripeProducts, setUseStripeProducts] = useState(false);
+  const [subscribing, setSubscribing] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
         setLoading(true);
-        setError(null);
 
-        // Fetch products and prices from API
+        // Try to fetch Stripe products
         const [productsResponse, pricesResponse] = await Promise.all([
           fetch('/api/stripe/products'),
           fetch('/api/stripe/prices')
         ]);
 
-        if (!productsResponse.ok || !pricesResponse.ok) {
-          throw new Error('Failed to fetch products');
+        if (productsResponse.ok && pricesResponse.ok) {
+          const productsData = await productsResponse.json();
+          const pricesData = await pricesResponse.json();
+
+          console.log('Products data:', productsData);
+          console.log('Prices data:', pricesData);
+
+          if (productsData.length > 0 && pricesData.length > 0) {
+            // Filter products that have features metadata (our pricing plans)
+            const validProducts = productsData.filter((product: any) => 
+              product.metadata && product.metadata.features
+            );
+
+            console.log('Valid products with features:', validProducts);
+
+            if (validProducts.length > 0) {
+              // Group prices by product
+              const productsWithPricing = validProducts.map((product: any) => ({
+                product,
+                prices: pricesData.filter((price: any) => 
+                  // Handle both string ID and expanded product object
+                  (typeof price.product === 'string' && price.product === product.id) ||
+                  (typeof price.product === 'object' && price.product.id === product.id)
+                )
+              }));
+
+              console.log('Products with pricing:', productsWithPricing);
+              console.log('Setting useStripeProducts to true');
+              setStripeProducts(productsWithPricing);
+              setUseStripeProducts(true);
+            } else {
+              console.log('No valid products with features found, using fallback');
+              setUseStripeProducts(false);
+            }
+          } else {
+            console.log('No products or prices found, using fallback');
+            setUseStripeProducts(false);
+          }
+        } else {
+          console.log('API responses not ok, using fallback');
+          console.log('Products response:', productsResponse.status);
+          console.log('Prices response:', pricesResponse.status);
+          setUseStripeProducts(false);
         }
-
-        const productsData = await productsResponse.json();
-        const pricesData = await pricesResponse.json();
-
-        // Group prices by product
-        const productsWithPricing = productsData.map((product: StripeProduct) => ({
-          product,
-          prices: pricesData.filter((price: StripePrice) => price.product === product.id)
-        }));
-
-        setProducts(productsWithPricing);
       } catch (err) {
-        console.error('Error fetching products:', err);
-        setError('Failed to load products. Please try again.');
+        console.error('Error fetching Stripe products:', err);
+        // Fall back to predefined plans
       } finally {
         setLoading(false);
       }
@@ -98,8 +194,58 @@ export default function ProductsPage() {
       case 'safety':
       case 'compliance':
         return <Shield className="h-4 w-4" />;
+      case 'trial':
+        return <Crown className="h-4 w-4" />;
       default:
         return <Check className="h-4 w-4" />;
+    }
+  };
+
+  const handleSubscribe = async (product: any, prices: any[]) => {
+    if (!selectedAirClub) {
+      alert('Please select an air club first');
+      return;
+    }
+
+    if (prices.length === 0) {
+      alert('No pricing available for this plan');
+      return;
+    }
+
+    try {
+      setSubscribing(product.id);
+      
+      // Use the first price (usually the monthly price)
+      const priceId = prices[0].id;
+      
+      // Create checkout session
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId,
+          airClubId: selectedAirClub.id,
+          planName: product.name,
+          aircraftLimit: product.metadata?.aircraft_limit || 1
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect to Stripe checkout
+      window.location.href = url;
+      
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      alert('Failed to start subscription process. Please try again.');
+    } finally {
+      setSubscribing(null);
     }
   };
 
@@ -133,32 +279,6 @@ export default function ProductsPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Products & Pricing</h1>
-          <p className="text-muted-foreground">
-            View available products and pricing plans for your air club.
-          </p>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-destructive">{error}</p>
-              <Button 
-                onClick={() => window.location.reload()} 
-                className="mt-4"
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div>
@@ -166,19 +286,22 @@ export default function ProductsPage() {
         <p className="text-muted-foreground">
           View available products and pricing plans for your air club.
         </p>
+        {!selectedAirClub && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800 text-sm">
+              ⚠️ Please select an air club from the dropdown to subscribe to a plan.
+            </p>
+          </div>
+        )}
       </div>
 
-      {products.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-muted-foreground">No products found.</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
+      {useStripeProducts ? (
+        // Show Stripe products if available
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {products.map(({ product, prices }) => (
+          {stripeProducts.map(({ product, prices }) => {
+            console.log(`Product ${product.name}:`, product);
+            console.log(`Prices for ${product.name}:`, prices);
+            return (
             <Card key={product.id} className="relative">
               {product.metadata.featured === 'true' && (
                 <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
@@ -205,7 +328,7 @@ export default function ProductsPage() {
                     <p className="text-sm text-muted-foreground">No pricing available</p>
                   ) : (
                     <div className="space-y-1">
-                      {prices.map((price) => (
+                      {prices.map((price: any) => (
                         <div key={price.id} className="flex justify-between items-center text-sm">
                           <span>
                             {price.recurring ? (
@@ -238,26 +361,87 @@ export default function ProductsPage() {
                   </div>
                 )}
 
-                {/* Metadata */}
-                {Object.keys(product.metadata).length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm text-muted-foreground">Details</h4>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      {Object.entries(product.metadata)
-                        .filter(([key]) => !['features', 'featured'].includes(key))
-                        .map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
-                            <span>{value}</span>
-                          </div>
-                        ))}
-                    </div>
+                <div className="pt-2">
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => handleSubscribe(product, prices)}
+                    disabled={subscribing === product.id}
+                  >
+                    {subscribing === product.id ? 'Processing...' : 'Subscribe'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+          })}
+        </div>
+      ) : (
+        // Show predefined plans as fallback
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {predefinedPlans.map((plan) => (
+            <Card key={plan.id} className="relative">
+              {plan.popular && (
+                <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
+                  <Star className="h-3 w-3 mr-1" />
+                  Most Popular
+                </Badge>
+              )}
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {plan.name}
+                </CardTitle>
+                <CardDescription>
+                  {plan.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Pricing */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">Pricing</h4>
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Monthly</span>
+                    <span className="font-medium text-lg">{plan.price}/month</span>
                   </div>
-                )}
+                </div>
+
+                {/* Features */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">Features</h4>
+                  <div className="space-y-1">
+                    {plan.features.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        {getFeatureIcon(feature)}
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Aircraft Limit */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">Aircraft Limit</h4>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Plane className="h-4 w-4" />
+                    <span>
+                      {plan.aircraftLimit === 999 ? 'Unlimited' : `${plan.aircraftLimit} aircraft`}
+                    </span>
+                  </div>
+                </div>
 
                 <div className="pt-2">
-                  <Button className="w-full" variant="outline">
-                    View Details
+                  <Button 
+                    className="w-full" 
+                    variant="outline"
+                    onClick={() => {
+                      if (!selectedAirClub) {
+                        alert('Please select an air club first');
+                        return;
+                      }
+                      alert('This plan is not yet available for subscription. Please contact support.');
+                    }}
+                  >
+                    Subscribe
                   </Button>
                 </div>
               </CardContent>

@@ -199,33 +199,14 @@ export async function signUp(formData: FormData) {
 
 // Sign out function
 export async function signOut() {
-  const supabase = await createClient();
-  
-  // Get current user for logging
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    // Get user's air club for logging
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('air_club_id')
-      .eq('user_id', user.id)
-      .single();
-    
-
-  }
-
-  // Sign out from Supabase
-  const { error } = await supabase.auth.signOut();
-  
-  if (error) {
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect('/');
+  } catch (error) {
     console.error('Error signing out:', error);
+    redirect('/');
   }
-
-  // Clear any cached session data
-  console.log('Sign out completed, redirecting to home page');
-  
-  // Force redirect to home page
-  redirect('/');
 }
 
 // Update profile
@@ -256,8 +237,6 @@ export async function updateProfile(formData: FormData) {
     return { error: 'Not authenticated.' };
   }
 
-  console.log('Updating display_name for user:', user.id, 'with name:', fullName);
-
   // Update display_name in auth.users table only
   const { error: authError } = await supabase.auth.updateUser({
     data: {
@@ -270,7 +249,6 @@ export async function updateProfile(formData: FormData) {
     return { error: `Failed to update profile: ${authError.message}` };
   }
 
-  console.log('Auth users display_name updated successfully');
   return { success: 'Profile updated successfully.' };
 }
 
@@ -382,35 +360,28 @@ export async function deleteAccount(formData: FormData) {
 
 // Google OAuth sign in
 export async function signInWithGoogle() {
-  const supabase = await createClient();
-  
-  console.log('Starting Google OAuth...');
-  
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://www.slotroster.com/auth/callback',
-        queryParams: {
-          prompt: 'select_account',
-          access_type: 'offline',
-        },
-      },
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+      }
     });
 
     if (error) {
       console.error('Google OAuth error:', error);
-      throw new Error(`Google OAuth failed: ${error.message}`);
+      throw new Error('Failed to initiate Google OAuth.');
     }
 
-    console.log('Google OAuth initiated successfully:', data);
-    
     // Redirect to the OAuth URL
     if (data?.url) {
       redirect(data.url);
+    } else {
+      throw new Error('No OAuth URL received.');
     }
   } catch (error) {
     console.error('Google OAuth exception:', error);
-    throw error;
+    throw new Error('An unexpected error occurred.');
   }
 }

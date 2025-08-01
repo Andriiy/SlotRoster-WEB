@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import useSWR, { mutate } from 'swr';
 import { Suspense, useEffect, useState } from 'react';
 import { Loader2, PlusCircle, RefreshCw, Edit } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -61,6 +62,7 @@ interface AirClub {
 }
 
 function FlyingCommunity() {
+  const router = useRouter();
   const { data: airClubs, error, isLoading } = useSWR<AirClub[]>('/api/air-clubs', fetcher, {
     revalidateOnMount: true,
     dedupingInterval: 0
@@ -147,7 +149,7 @@ function FlyingCommunity() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = `/dashboard/air-club-crud`}
+                  onClick={() => router.push(`/dashboard/air-club-crud`)}
                   className="flex items-center gap-1"
                 >
                   <Edit className="h-3 w-3" />
@@ -171,7 +173,7 @@ function FlyingCommunity() {
               <Button 
                 onClick={() => {
                   // Navigate to CRUD page with create mode
-                  window.location.href = '/dashboard/air-club-crud?mode=create';
+                  router.push('/dashboard/air-club-crud?mode=create');
                 }}
                 className="flex items-center gap-2"
                 size="lg"
@@ -191,6 +193,7 @@ function FlyingCommunity() {
 
 export default function HomePage() {
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -214,7 +217,7 @@ export default function HomePage() {
           <Button 
             onClick={() => {
               // Navigate to CRUD page with create mode
-              window.location.href = '/dashboard/air-club-crud?mode=create';
+              router.push('/dashboard/air-club-crud?mode=create');
             }}
             size="sm"
             className="flex items-center gap-2"

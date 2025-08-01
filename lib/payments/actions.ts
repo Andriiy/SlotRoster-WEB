@@ -1,12 +1,21 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createCheckoutSession, createCustomerPortalSession } from './stripe';
+import { createCheckoutSessionURL, createCustomerPortalSession } from './stripe';
 import { withAirClub } from '@/lib/auth/middleware';
 
 export const checkoutAction = withAirClub(async (formData, airClub) => {
   const priceId = formData.get('priceId') as string;
-  await createCheckoutSession({ airClub: airClub, priceId });
+  const session = await createCheckoutSessionURL({ 
+    airClub: airClub, 
+    priceId,
+    metadata: {
+      airClubId: airClub.id,
+      planName: 'Unknown',
+      aircraftLimit: '1'
+    }
+  });
+  redirect(session.url!);
 });
 
 export const customerPortalAction = withAirClub(async (_, airClub) => {

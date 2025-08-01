@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/middleware';
+import { startFreeTrial } from '@/lib/payments/stripe';
+import { NextRequest } from 'next/server';
 
 // GET - Fetch all air clubs
 export async function GET() {
@@ -32,80 +34,82 @@ export async function GET() {
 }
 
 // POST - Create new air club
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    console.log('POST /api/air-clubs - Starting request');
-    
     const supabase = await createClient();
-    console.log('Supabase client created');
-    
-    // Get current user for authentication
-    const user = await getCurrentUser();
-    console.log('User authentication result:', user ? 'Authenticated' : 'Not authenticated');
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    // Parse request body
     const body = await request.json();
-    console.log('Request body:', body);
-    
-    const { name, address, phone, email, airport, description, website } = body;
+    const { name, addr, phone, email, airport, description, website } = body;
 
     // Validate required fields
-    if (!name || !email || !airport) {
-      console.log('Validation failed - missing required fields');
-      return NextResponse.json({ 
-        error: 'Missing required fields: name, email, and airport are required' 
-      }, { status: 400 });
+    if (!name || !email) {
+      return NextResponse.json(
+        { error: 'Name and email are required' },
+        { status: 400 }
+      );
     }
 
-    // Get current UTC timestamp
-    const utcTimestamp = new Date().toISOString();
-    
-    console.log('Creating air club with data:', {
-      name,
-      addr: address,
-      phone,
-      email,
-      airport,
-      description,
-      website,
-      created_by: user.id,
-      plan_name: 'Free',
-      subscription_status: 'inactive',
-      created_at: utcTimestamp,
-    });
-
-    // Create new air club
-    const { data: newAirClub, error } = await supabase
+    // Create air club
+    const { data: newAirClub, error: createError } = await supabase
       .from('air_club')
       .insert({
         name,
-        address: address, // Try using 'address' instead of 'addr'
+        addr,
         phone,
         email,
         airport,
         description,
         website,
-        created_by: user.id,
-        plan_name: 'Free',
-        subscription_status: 'inactive',
-        created_at: utcTimestamp, // Set UTC timestamp explicitly
+        created_by: user.id
       })
       .select()
       .single();
 
-    if (error) {
-      console.error('Supabase error creating air club:', error);
-      return NextResponse.json({ error: `Failed to create air club: ${error.message}` }, { status: 500 });
+    if (createError) {
+      console.error('Supabase error creating air club:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create air club' },
+        { status: 500 }
+      );
     }
 
-    console.log('Air club created successfully:', newAirClub);
-    return NextResponse.json(newAirClub, { status: 201 });
+    // Start free trial
+    try {
+      const { data: airClubWithTrial, error: trialError } = await supabase
+        .from('air_club')
+        .update({
+          trial_start_date: new Date().toISOString(),
+          trial_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          is_trial_active: true,
+          trial_plan_name: 'Free',
+          trial_aircraft_limit: 1,
+          subscription_status: 'trialing'
+        })
+        .eq('id', newAirClub.id)
+        .select()
+        .single();
+
+      if (trialError) {
+        console.error('Error starting free trial:', trialError);
+      }
+    } catch (trialError) {
+      console.error('Error starting free trial:', trialError);
+    }
+
+    return NextResponse.json(newAirClub);
   } catch (error) {
     console.error('Error in POST /api/air-clubs:', error);
-    return NextResponse.json({ error: `Internal server error: ${error}` }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 

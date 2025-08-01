@@ -21,7 +21,10 @@ function LandingPageContent() {
         setLoading(true);
         
         console.log('Checking user authentication...');
-        console.log('Current URL:', window.location.href);
+        // Only log window.location on client side to prevent hydration issues
+        if (typeof window !== 'undefined') {
+          console.log('Current URL:', window.location.href);
+        }
         console.log('Search params:', Object.fromEntries(searchParams.entries()));
         
         // Check both user and session to ensure we have complete auth state
@@ -160,7 +163,7 @@ function LandingPageContent() {
               ) : (
                 <Button size="lg" asChild className="text-lg">
                   <Link href="/sign-up">
-                    Start Free
+                    Start Free Trial
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -290,23 +293,24 @@ function LandingPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              Aircraft-Based Pricing
+              Simple Aircraft-Based Pricing
             </h2>
             <p className="text-xl text-muted-foreground">
-              Pay only for the aircraft you manage. Start free with 1 aircraft!
+              Pay only for the aircraft you manage. Start with 1 aircraft for €5/month!
             </p>
           </div>
           
           <div className="grid md:grid-cols-5 gap-6">
-            {/* Free Plan */}
+            {/* Single Aircraft Plan */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Plane className="h-4 w-4 mr-2" />
-                  Free
+                  Single Aircraft
                 </CardTitle>
-                <div className="text-2xl font-bold text-foreground">€0<span className="text-sm text-muted-foreground">/month</span></div>
+                <div className="text-2xl font-bold text-foreground">€5<span className="text-sm text-muted-foreground">/month</span></div>
                 <CardDescription>1 Aircraft</CardDescription>
+                <div className="text-sm text-green-600 font-medium">1 Month Free Trial</div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -316,7 +320,7 @@ function LandingPageContent() {
                   </div>
                   <div className="flex items-center">
                     <Check className="h-4 w-4 text-primary mr-2" />
-                    <span className="text-sm">Basic scheduling tools</span>
+                    <span className="text-sm">Advanced scheduling tools</span>
                   </div>
                   <div className="flex items-center">
                     <Check className="h-4 w-4 text-primary mr-2" />
@@ -326,9 +330,13 @@ function LandingPageContent() {
                     <Check className="h-4 w-4 text-primary mr-2" />
                     <span className="text-sm">Email support</span>
                   </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm">Analytics dashboard</span>
+                  </div>
                 </div>
                 <Button className="w-full text-sm" asChild>
-                  <Link href="/sign-up">Start Free</Link>
+                  <Link href="/sign-up">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -342,6 +350,7 @@ function LandingPageContent() {
                 </CardTitle>
                 <div className="text-2xl font-bold text-foreground">€15<span className="text-sm text-muted-foreground">/month</span></div>
                 <CardDescription>3 Aircraft</CardDescription>
+                <div className="text-sm text-green-600 font-medium">1 Month Free Trial</div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -361,9 +370,13 @@ function LandingPageContent() {
                     <Check className="h-4 w-4 text-primary mr-2" />
                     <span className="text-sm">Analytics dashboard</span>
                   </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm">Flying Community management</span>
+                  </div>
                 </div>
                 <Button className="w-full text-sm" asChild>
-                  <Link href="/sign-up">Get Started</Link>
+                  <Link href="/sign-up">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -380,6 +393,7 @@ function LandingPageContent() {
                 </CardTitle>
                 <div className="text-2xl font-bold text-foreground">€25<span className="text-sm text-muted-foreground">/month</span></div>
                 <CardDescription>5 Aircraft</CardDescription>
+                <div className="text-sm text-green-600 font-medium">1 Month Free Trial</div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -399,9 +413,13 @@ function LandingPageContent() {
                     <Check className="h-4 w-4 text-primary mr-2" />
                     <span className="text-sm">Flying Community management</span>
                   </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm">Advanced security</span>
+                  </div>
                 </div>
                 <Button className="w-full text-sm" asChild>
-                  <Link href="/sign-up">Get Started</Link>
+                  <Link href="/sign-up">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -415,6 +433,7 @@ function LandingPageContent() {
                 </CardTitle>
                 <div className="text-2xl font-bold text-foreground">€35<span className="text-sm text-muted-foreground">/month</span></div>
                 <CardDescription>7 Aircraft</CardDescription>
+                <div className="text-sm text-green-600 font-medium">1 Month Free Trial</div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -434,9 +453,13 @@ function LandingPageContent() {
                     <Check className="h-4 w-4 text-primary mr-2" />
                     <span className="text-sm">API access</span>
                   </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm">Custom branding</span>
+                  </div>
                 </div>
                 <Button className="w-full text-sm" asChild>
-                  <Link href="/sign-up">Get Started</Link>
+                  <Link href="/sign-up">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -450,6 +473,7 @@ function LandingPageContent() {
                 </CardTitle>
                 <div className="text-2xl font-bold text-foreground">€50<span className="text-sm text-muted-foreground">/month</span></div>
                 <CardDescription>Unlimited Aircraft</CardDescription>
+                <div className="text-sm text-green-600 font-medium">1 Month Free Trial</div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -469,9 +493,13 @@ function LandingPageContent() {
                     <Check className="h-4 w-4 text-primary mr-2" />
                     <span className="text-sm">Enterprise features</span>
                   </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm">24/7 priority support</span>
+                  </div>
                 </div>
                 <Button className="w-full text-sm" asChild>
-                  <Link href="/sign-up">Get Started</Link>
+                  <Link href="/sign-up">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -585,7 +613,7 @@ function LandingPageContent() {
                 How does the aircraft-based pricing work?
               </h3>
               <p className="text-muted-foreground">
-                You pay based on the number of aircraft you manage. Start free with 1 aircraft, then upgrade as your fleet grows.
+                You pay based on the number of aircraft you manage: €5/month for 1 aircraft, €15/month for 3 aircraft, €25/month for 5 aircraft, €35/month for 7 aircraft, or €50/month for unlimited aircraft. All plans include a 1-month free trial.
               </p>
             </div>
             
@@ -594,16 +622,16 @@ function LandingPageContent() {
                 Can I try SlotRoster before committing?
               </h3>
               <p className="text-muted-foreground">
-                Yes! Start with our free tier that includes 1 aircraft. You can upgrade anytime as your needs grow.
+                Yes! All plans include a 1-month free trial. Start with 1 aircraft for €5/month after the trial period.
               </p>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                What features are included in the free plan?
+                What features are included in the single aircraft plan?
               </h3>
               <p className="text-muted-foreground">
-                The free plan includes 1 aircraft management, basic scheduling tools, member management, and email support.
+                The €5/month plan includes 1 aircraft management, advanced scheduling tools, member management, email support, and analytics dashboard.
               </p>
             </div>
             
@@ -639,7 +667,7 @@ function LandingPageContent() {
             ) : (
               <Button size="lg" asChild className="text-lg">
                 <Link href="/sign-up">
-                  Start Free
+                  Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
