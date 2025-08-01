@@ -7,12 +7,21 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error');
   const next = searchParams.get('next') || '/dashboard';
 
+  // Log the callback request for debugging
+  console.log('OAuth callback received:', {
+    url: request.url,
+    code: code ? 'present' : 'missing',
+    error: error || 'none',
+    next
+  });
+
   if (error) {
     console.error('OAuth error:', error, searchParams.get('error_description'));
     return NextResponse.redirect(new URL('/sign-in?error=oauth_error', request.url));
   }
 
   if (!code) {
+    console.error('No OAuth code received');
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
@@ -26,8 +35,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (!data.user) {
+      console.error('No user data after OAuth exchange');
       return NextResponse.redirect(new URL('/sign-in?error=no_user', request.url));
     }
+
+    console.log('OAuth user authenticated:', data.user.id);
 
     // Check if user profile exists
     const { data: profile, error: profileError } = await supabase
@@ -37,11 +49,12 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error creating profile for OAuth user:', profileError);
+      console.error('Error checking profile for OAuth user:', profileError);
       return NextResponse.redirect(new URL('/sign-in?error=profile_error', request.url));
     }
 
     if (!profile) {
+      console.log('Creating profile for OAuth user:', data.user.id);
       // Create profile for OAuth user
       const { error: insertError } = await supabase
         .from('profiles')
@@ -66,13 +79,14 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!airClub) {
-      console.error('air_club_id is required - redirecting to setup');
+      console.log('No air club found for user, redirecting to setup');
       return NextResponse.redirect(new URL('/setup', request.url));
     }
 
+    console.log('OAuth flow completed successfully, redirecting to:', next);
     return NextResponse.redirect(new URL(next, request.url));
   } catch (error) {
-    console.error('Unexpected error creating profile:', error);
+    console.error('Unexpected error in OAuth callback:', error);
     return NextResponse.redirect(new URL('/sign-in?error=unexpected_error', request.url));
   }
 } 
