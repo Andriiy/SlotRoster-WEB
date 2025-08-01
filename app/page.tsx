@@ -1,63 +1,83 @@
 export default function HomePage() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#ffffff',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: 'bold',
-          marginBottom: '1rem',
-          color: '#000000'
-        }}>
-          SlotRoster
-        </h1>
-        <p style={{
-          marginBottom: '2rem',
-          color: '#666666'
-        }}>
-          Flight Club Management Platform
-        </p>
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'center'
-        }}>
-          <a 
-            href="/sign-in" 
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#000000',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.5rem',
-              textDecoration: 'none',
-              fontWeight: '500'
-            }}
-          >
-            Sign In
-          </a>
-          <a 
-            href="/sign-up" 
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#f3f4f6',
-              color: '#000000',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '0.5rem',
-              textDecoration: 'none',
-              fontWeight: '500'
-            }}
-          >
-            Sign Up
-          </a>
+    <html>
+      <head>
+        <title>SlotRoster - Flight Club Management</title>
+        <meta name="description" content="Manage your flight club aircraft, bookings, and members." />
+        <style>{`
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            background-color: #ffffff; 
+            color: #000000; 
+          }
+          .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .content {
+            text-align: center;
+          }
+          .title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+          }
+          .subtitle {
+            margin-bottom: 2rem;
+            color: #666666;
+          }
+          .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+          }
+          .button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 500;
+          }
+          .primary {
+            background-color: #000000;
+            color: #ffffff;
+          }
+          .secondary {
+            background-color: #f3f4f6;
+            color: #000000;
+          }
+        `}</style>
+      </head>
+      <body>
+        <div className="container">
+          <div className="content">
+            <h1 className="title">
+              SlotRoster
+            </h1>
+            <p className="subtitle">
+              Flight Club Management Platform
+            </p>
+            <div className="buttons">
+              <a 
+                href="/sign-in" 
+                className="button primary"
+              >
+                Sign In
+              </a>
+              <a 
+                href="/sign-up" 
+                className="button secondary"
+              >
+                Sign Up
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </body>
+    </html>
   );
 } 
