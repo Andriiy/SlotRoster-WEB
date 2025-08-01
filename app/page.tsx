@@ -1,6 +1,12 @@
-import Link from 'next/link';
+'use client';
+
+import { useEffect } from 'react';
 
 export default function HomePage() {
+  useEffect(() => {
+    console.log('HomePage component mounted successfully');
+  }, []);
+
   return (
     <div className="container">
       <div className="content">
