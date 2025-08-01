@@ -1,3 +1,4 @@
+import './globals.css';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -15,21 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <style>{`
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-          }
-        `}</style>
-      </head>
-      <body>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className="min-h-[100dvh] bg-background">
         {children}
       </body>
     </html>
