@@ -18,7 +18,7 @@ const fetcher = async (url: string) => {
 
 // Club page with segmented button selector
 export default function ClubPage() {
-  const [activeSection, setActiveSection] = useState<'info' | 'subscription' | 'members'>('info');
+  const [activeSection, setActiveSection] = useState<'info' | 'subscription'>('info');
   const { selectedAirClub, airClubs } = useAirClub();
 
   // Fetch trial status for the selected air club
@@ -81,15 +81,6 @@ export default function ClubPage() {
       >
         <CreditCard className="h-4 w-4 mr-2" />
         Subscription
-      </Button>
-      <Button
-        variant={activeSection === 'members' ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setActiveSection('members')}
-        className="flex-1"
-      >
-        <Users className="h-4 w-4 mr-2" />
-        Members
       </Button>
     </div>
   );
@@ -238,37 +229,7 @@ export default function ClubPage() {
     </div>
   );
 
-  // Members Section
-  const MembersSection = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Club Members
-          </CardTitle>
-          <CardDescription>Manage your club's members and their roles</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Currently showing information for: <strong>{selectedAirClub.name}</strong>
-              </p>
-              <Button size="sm">Invite Member</Button>
-            </div>
-            <div className="text-center py-8">
-              <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Member Management</h3>
-              <p className="text-muted-foreground">
-                Member management features will be available in future updates.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
 
   return (
     <div className="space-y-6">
@@ -284,7 +245,6 @@ export default function ClubPage() {
 
       {activeSection === 'info' && <ClubInfoSection />}
       {activeSection === 'subscription' && <SubscriptionSection />}
-      {activeSection === 'members' && <MembersSection />}
     </div>
   );
 } 

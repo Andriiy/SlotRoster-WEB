@@ -42,10 +42,7 @@ const predefinedPlans: PricingPlan[] = [
     description: 'Ideal for small flying clubs and schools',
     features: [
       '3 Aircraft Management',
-      'Advanced Scheduling',
-      'Member Management',
-      'Priority Support',
-      '1 Month Free Trial'
+      'Advanced Scheduling'
     ],
     aircraftLimit: 3,
     popular: true,

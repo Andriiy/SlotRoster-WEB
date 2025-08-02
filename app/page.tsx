@@ -1,8 +1,6 @@
+import { redirect } from 'next/navigation';
+
 export default function HomePage() {
-  return (
-    <div>
-      <h1>Hello World</h1>
-      <p>This is a test page.</p>
-    </div>
-  );
+  // Redirect to the landing page which contains the full SlotRoster application
+  redirect('/landing');
 } 

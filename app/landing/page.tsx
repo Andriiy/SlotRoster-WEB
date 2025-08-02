@@ -28,10 +28,19 @@ function LandingPageContent() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Ensure component is mounted before checking auth
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Only run auth check after component is mounted to prevent hydration mismatch
+    if (!mounted) return;
+
     async function checkUser() {
       try {
         setLoading(true);
@@ -45,11 +54,6 @@ function LandingPageContent() {
         }
         
         console.log('Checking user authentication...');
-        // Only log window.location on client side to prevent hydration issues
-        if (typeof window !== 'undefined') {
-          console.log('Current URL:', window.location.href);
-        }
-        console.log('Search params:', Object.fromEntries(searchParams.entries()));
         
         // Check both user and session to ensure we have complete auth state
         const [userData, sessionData] = await Promise.all([
@@ -97,7 +101,7 @@ function LandingPageContent() {
 
       return () => subscription.unsubscribe();
     }
-  }, [searchParams]);
+  }, [mounted, searchParams]);
 
   async function handleSignOut() {
     try {
@@ -127,8 +131,8 @@ function LandingPageContent() {
     );
   }
 
-  // Show loading state while checking authentication
-  if (loading) {
+  // Show loading state while checking authentication or before mounting
+  if (loading || !mounted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
