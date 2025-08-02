@@ -362,26 +362,39 @@ export async function deleteAccount(formData: FormData) {
 export async function signInWithGoogle() {
   try {
     const supabase = await createClient();
+    
+    // Get the correct site URL for production with fallback
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com';
+    const redirectUrl = `${siteUrl}/auth/callback`;
+    
+    console.log('Initiating Google OAuth with redirect:', redirectUrl);
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     });
 
     if (error) {
       console.error('Google OAuth error:', error);
-      throw new Error('Failed to initiate Google OAuth.');
+      throw new Error(`Failed to initiate Google OAuth: ${error.message}`);
     }
 
     // Redirect to the OAuth URL
     if (data?.url) {
+      console.log('Redirecting to Google OAuth URL');
       redirect(data.url);
     } else {
-      throw new Error('No OAuth URL received.');
+      console.error('No OAuth URL received from Supabase');
+      throw new Error('No OAuth URL received from authentication provider.');
     }
   } catch (error) {
     console.error('Google OAuth exception:', error);
-    throw new Error('An unexpected error occurred.');
+    throw new Error(`OAuth error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

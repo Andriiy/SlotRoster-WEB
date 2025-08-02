@@ -186,6 +186,48 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               Continue with Google
             </Button>
 
+            {/* Temporary Debug Button - Remove after fixing OAuth */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  console.log('Testing Google OAuth...');
+                  const { createClient } = await import('@/lib/supabase/server');
+                  const supabase = await createClient();
+                  
+                  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com';
+                  const redirectUrl = `${siteUrl}/auth/callback`;
+                  
+                  console.log('Redirect URL:', redirectUrl);
+                  console.log('Site URL env:', process.env.NEXT_PUBLIC_SITE_URL);
+                  
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: redirectUrl
+                    }
+                  });
+                  
+                  console.log('OAuth result:', { data, error });
+                  
+                  if (error) {
+                    alert(`OAuth Error: ${error.message}`);
+                  } else if (data?.url) {
+                    window.location.href = data.url;
+                  } else {
+                    alert('No OAuth URL received');
+                  }
+                } catch (error) {
+                  console.error('OAuth test error:', error);
+                  alert(`Test error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }}
+              className="w-full h-11 border-2 border-red-200 hover:bg-red-50 text-red-600"
+            >
+              🔧 Debug Google OAuth
+            </Button>
+
             <div className="text-center text-sm text-muted-foreground">
               {mode === 'signin' ? (
                 <>

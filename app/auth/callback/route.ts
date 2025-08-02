@@ -6,20 +6,25 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
     const next = searchParams.get('next') || '/dashboard';
 
-    // Log the callback request for debugging
+    // Enhanced logging for production debugging
     console.log('OAuth callback received:', {
       url: request.url,
       code: code ? 'present' : 'missing',
       error: error || 'none',
+      errorDescription: errorDescription || 'none',
       next
     });
 
     // Handle OAuth errors
     if (error) {
-      console.error('OAuth error:', error, searchParams.get('error_description'));
-      return NextResponse.redirect(new URL('/sign-in?error=oauth_error', request.url));
+      console.error('OAuth error:', error, errorDescription);
+      const errorUrl = new URL('/sign-in', request.url);
+      errorUrl.searchParams.set('error', 'oauth_error');
+      errorUrl.searchParams.set('description', errorDescription || error);
+      return NextResponse.redirect(errorUrl);
     }
 
     // Handle missing OAuth code (direct access to callback)
@@ -32,13 +37,18 @@ export async function GET(request: NextRequest) {
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
     if (exchangeError) {
-      console.error('OAuth callback error:', exchangeError);
-      return NextResponse.redirect(new URL('/sign-in?error=exchange_error', request.url));
+      console.error('OAuth callback exchange error:', exchangeError);
+      const errorUrl = new URL('/sign-in', request.url);
+      errorUrl.searchParams.set('error', 'exchange_error');
+      errorUrl.searchParams.set('description', exchangeError.message);
+      return NextResponse.redirect(errorUrl);
     }
 
     if (!data.user) {
       console.error('No user data after OAuth exchange');
-      return NextResponse.redirect(new URL('/sign-in?error=no_user', request.url));
+      const errorUrl = new URL('/sign-in', request.url);
+      errorUrl.searchParams.set('error', 'no_user');
+      return NextResponse.redirect(errorUrl);
     }
 
     console.log('OAuth user authenticated:', data.user.id);
@@ -47,12 +57,15 @@ export async function GET(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', data.user.id)
+      .eq('user_id', data.user.id)
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') {
       console.error('Error checking profile for OAuth user:', profileError);
-      return NextResponse.redirect(new URL('/sign-in?error=profile_error', request.url));
+      const errorUrl = new URL('/sign-in', request.url);
+      errorUrl.searchParams.set('error', 'profile_error');
+      errorUrl.searchParams.set('description', profileError.message);
+      return NextResponse.redirect(errorUrl);
     }
 
     if (!profile) {
@@ -61,15 +74,19 @@ export async function GET(request: NextRequest) {
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
-          id: data.user.id,
+          user_id: data.user.id,
           email: data.user.email,
           full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
           avatar_url: data.user.user_metadata?.avatar_url
         });
 
       if (insertError) {
         console.error('Error creating profile for OAuth user:', insertError);
-        return NextResponse.redirect(new URL('/sign-in?error=profile_creation_error', request.url));
+        const errorUrl = new URL('/sign-in', request.url);
+        errorUrl.searchParams.set('error', 'profile_creation_error');
+        errorUrl.searchParams.set('description', insertError.message);
+        return NextResponse.redirect(errorUrl);
       }
     }
 
