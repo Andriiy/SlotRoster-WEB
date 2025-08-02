@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/middleware';
 
+// Air club access control:
+// - Users can only update/delete air clubs they own (created_by field)
+
 // PUT - Update air club
 export async function PUT(
   request: Request,
@@ -26,6 +29,21 @@ export async function PUT(
       return NextResponse.json({ 
         error: 'Missing required fields: name, email, and airport are required' 
       }, { status: 400 });
+    }
+
+    // Check if user owns this air club
+    const { data: airClub, error: accessError } = await supabase
+      .from('air_club')
+      .select('created_by')
+      .eq('id', params.id)
+      .single();
+
+    if (accessError || !airClub) {
+      return NextResponse.json({ error: 'Air club not found' }, { status: 404 });
+    }
+
+    if (airClub.created_by !== user.id) {
+      return NextResponse.json({ error: 'Access denied. You can only update air clubs you own.' }, { status: 403 });
     }
 
     // Update air club
@@ -73,6 +91,21 @@ export async function DELETE(
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Check if user owns this air club
+    const { data: airClub, error: accessError } = await supabase
+      .from('air_club')
+      .select('created_by')
+      .eq('id', params.id)
+      .single();
+
+    if (accessError || !airClub) {
+      return NextResponse.json({ error: 'Air club not found' }, { status: 404 });
+    }
+
+    if (airClub.created_by !== user.id) {
+      return NextResponse.json({ error: 'Access denied. You can only delete air clubs you own.' }, { status: 403 });
     }
 
     // Delete air club

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Settings, Shield, Menu, Package, User, Building2, ChevronDown, Plane, Calendar, CreditCard } from 'lucide-react';
+import { Users, Settings, Shield, Menu, Package, User, Building2, ChevronDown, Plane, Calendar, CreditCard, LayoutDashboard } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,7 @@ export default function DashboardLayout({
   }, []);
 
   const navItems = [
-    { href: '/dashboard', icon: Users, label: 'Home' },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/club', icon: Building2, label: 'Club Info' },
     { href: '/dashboard/fleet', icon: Plane, label: 'Fleet' },
     { href: '/dashboard/bookings', icon: Calendar, label: 'Bookings' },

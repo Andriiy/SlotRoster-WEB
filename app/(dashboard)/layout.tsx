@@ -108,18 +108,16 @@ function UserMenu() {
     }
   }, [user]);
 
+  // Handle sign out with proper cache clearing and error handling
   async function handleSignOut() {
     setIsSigningOut(true);
     
     try {
-      // Clear all caches first
+      // Clear all caches first to prevent stale data
       clearAllCaches();
       
-      // Call the sign out action
-    await signOut();
-      
-      // Force a complete refresh
-      bruteForceRefresh();
+      // Call the sign out server action - this will redirect to home page
+      await signOut();
     } catch (error) {
       console.error('Sign out error:', error);
       // Even if there's an error, force refresh to ensure clean state
@@ -182,17 +180,17 @@ function UserMenu() {
         <DropdownMenuItem className="cursor-pointer">
           <Link href="/dashboard" className="flex w-full items-center">
             <Home className="mr-2 h-4 w-4" />
-            <span>Home</span>
+            <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        <form action={handleSignOut} className="w-full">
-          <button type="submit" className="flex w-full" disabled={isSigningOut}>
-            <DropdownMenuItem className="w-full flex-1 cursor-pointer" disabled={isSigningOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>
-            </DropdownMenuItem>
-          </button>
-        </form>
+        <DropdownMenuItem 
+          className="w-full cursor-pointer" 
+          disabled={isSigningOut}
+          onClick={handleSignOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

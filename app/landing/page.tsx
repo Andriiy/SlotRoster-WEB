@@ -168,7 +168,7 @@ function LandingPageContent() {
               {user ? (
                 <div className="flex items-center space-x-2">
                   <Button asChild>
-                    <Link href="/dashboard">Home</Link>
+                    <Link href="/dashboard">Dashboard</Link>
                   </Button>
                   <Button variant="outline" onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />

@@ -4,7 +4,11 @@ import { getCurrentUser } from '@/lib/auth/middleware';
 import { startFreeTrial } from '@/lib/payments/stripe';
 import { NextRequest } from 'next/server';
 
-// GET - Fetch all air clubs
+// Air clubs access control:
+// - Users can only see air clubs they own (created_by field)
+// - Users can only see air clubs they are members of (profiles table with user_id and air_club_id)
+
+// GET - Fetch air clubs that the user owns or is a member of
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -15,11 +19,42 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Fetch all air clubs
-    const { data: airClubs, error } = await supabase
+    // First, get the air club IDs where the user is a member (from profiles table)
+    const { data: memberAirClubIds, error: memberError } = await supabase
+      .from('profiles')
+      .select('air_club_id')
+      .eq('user_id', user.id)
+      .not('air_club_id', 'is', null);
+
+    if (memberError) {
+      console.error('Error fetching member air club IDs:', memberError);
+      return NextResponse.json({ error: 'Failed to fetch air clubs' }, { status: 500 });
+    }
+
+    // Extract air club IDs from the member query
+    const memberAirClubIdList = memberAirClubIds?.map(profile => profile.air_club_id).filter(Boolean) || [];
+
+    console.log('Air club access check:', {
+      userId: user.id,
+      ownedAirClubs: 'will be fetched',
+      memberAirClubIds: memberAirClubIdList,
+      memberCount: memberAirClubIdList.length
+    });
+
+    // Build the query based on whether the user has member air clubs
+    let query = supabase
       .from('air_club')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
+
+    if (memberAirClubIdList.length > 0) {
+      // User has member air clubs, include both owned and member air clubs
+      query = query.or(`created_by.eq.${user.id},id.in.(${memberAirClubIdList.join(',')})`);
+    } else {
+      // User has no member air clubs, only show owned air clubs
+      query = query.eq('created_by', user.id);
+    }
+
+    const { data: airClubs, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching air clubs:', error);
