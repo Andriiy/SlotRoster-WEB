@@ -36,7 +36,6 @@ export default function DashboardLayout({
     { href: '/dashboard/fleet', icon: Plane, label: 'Fleet' },
     { href: '/dashboard/bookings', icon: Calendar, label: 'Bookings' },
     { href: '/dashboard/members', icon: Users, label: 'Members' },
-    { href: '/dashboard/products', icon: Package, label: 'Products' },
     { href: '/dashboard/account-settings', icon: User, label: 'Account Settings' }
   ];
 
