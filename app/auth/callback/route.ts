@@ -56,21 +56,6 @@ export async function GET(request: NextRequest) {
     // OAuth authentication is complete - auth.users is automatically created by Supabase
     // No need to manually create profiles or use any other tables for authentication
 
-    // Check if user has an air club
-    const { data: airClub } = await supabase
-      .from('air_club')
-      .select('*')
-      .eq('created_by', data.user.id)
-      .single();
-
-    if (!airClub) {
-      console.log('No air club found for user, redirecting to setup');
-      // Use localhost for local development, production URL for production
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      const baseUrl = isDevelopment ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
-      return NextResponse.redirect(new URL('/setup', baseUrl));
-    }
-
     console.log('OAuth flow completed successfully, redirecting to:', next);
     // Use localhost for local development, production URL for production
     const isDevelopment = process.env.NODE_ENV === 'development';
