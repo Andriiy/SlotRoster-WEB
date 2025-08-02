@@ -193,8 +193,7 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               onClick={async () => {
                 try {
                   console.log('Testing Google OAuth...');
-                  const { createClient } = await import('@/lib/supabase/server');
-                  const supabase = await createClient();
+                  const { supabase } = await import('@/lib/supabase/client');
                   
                   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com';
                   const redirectUrl = `${siteUrl}/auth/callback`;
