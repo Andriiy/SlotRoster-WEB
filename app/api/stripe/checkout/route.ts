@@ -1,52 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createCheckoutSessionURL } from '@/lib/payments/stripe';
-import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/payments/stripe';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, airClubId, planName, aircraftLimit } = await request.json();
+    const { priceId, quantity = 1, airClubId, successUrl, cancelUrl } = await request.json();
 
-    if (!priceId || !airClubId || !planName) {
+    // Validate required fields
+    if (!priceId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { success: false, error: 'Price ID is required' },
         { status: 400 }
       );
     }
 
-    // Get the air club
-    const supabase = await createClient();
-    const { data: airClub, error: airClubError } = await supabase
-      .from('air_club')
-      .select('*')
-      .eq('id', airClubId)
-      .single();
-
-    if (airClubError || !airClub) {
-      console.error('Air club not found:', airClubError);
+    // Validate quantity
+    const qty = parseInt(quantity) || 1;
+    if (qty < 1 || qty > 10) {
       return NextResponse.json(
-        { error: 'Air club not found' },
-        { status: 404 }
+        { success: false, error: 'Quantity must be between 1 and 10' },
+        { status: 400 }
       );
     }
 
-    // Create checkout session with metadata
-    const session = await createCheckoutSessionURL({
-      airClub,
+    // Get current user
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'User not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    console.log('Checkout request data:', {
       priceId,
-      metadata: {
-        airClubId,
-        planName,
-        aircraftLimit: aircraftLimit?.toString() || '1'
-      }
+      quantity: qty,
+      airClubId,
+      userId: user.id,
+      userEmail: user.email
     });
 
-    return NextResponse.json({ url: session.url });
+    // Get price details to validate aircraft count
+    const price = await stripe.prices.retrieve(priceId);
+    const aircraftCount = parseInt(price.metadata?.aircraft_count || '1');
+    const productType = price.metadata?.type || 'monthly';
+
+    console.log('Price details:', {
+      priceId,
+      aircraftCount,
+      productType,
+      priceMetadata: price.metadata
+    });
+
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1, // Always 1 since price includes aircraft count
+        },
+      ],
+      mode: 'subscription',
+      success_url: successUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard?success=true`,
+      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/stripe?canceled=true`,
+      customer_email: user.email,
+      metadata: {
+        userId: user.id,
+        airClubId: airClubId || '',
+        priceId: priceId,
+        aircraftCount: aircraftCount.toString(),
+        productType: productType,
+        unitPrice: price.metadata?.unit_price || '0',
+        totalPrice: price.metadata?.total_price || '0',
+      },
+      subscription_data: {
+        metadata: {
+          userId: user.id,
+          airClubId: airClubId || '',
+          priceId: priceId,
+          aircraftCount: aircraftCount.toString(),
+          productType: productType,
+          unitPrice: price.metadata?.unit_price || '0',
+          totalPrice: price.metadata?.total_price || '0',
+        },
+      },
+    });
+
+    console.log('Created checkout session:', {
+      sessionId: session.id,
+      sessionMetadata: session.metadata,
+      subscriptionDataMetadata: (session as any).subscription_data?.metadata
+    });
+
+    return NextResponse.json({
+      success: true,
+      url: session.url,
+      sessionId: session.id,
+    });
 
   } catch (error) {
     console.error('Error creating checkout session:', error);
+    
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { 
+        success: false, 
+        error: 'Failed to create checkout session',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

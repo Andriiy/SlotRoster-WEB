@@ -133,7 +133,7 @@ function UserMenu() {
     return (
       <>
         <Link
-          href="/dashboard/products"
+          href="/dashboard/stripe"
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           Pricing
@@ -151,7 +151,7 @@ function UserMenu() {
     return (
       <>
         <Link
-          href="/dashboard/products"
+          href="/dashboard/stripe"
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           Pricing

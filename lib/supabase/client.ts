@@ -150,6 +150,56 @@ export interface Database {
           updated_at?: string;
         };
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          stripe_subscription_id: string;
+          stripe_customer_id: string | null;
+          air_club_id: string | null;
+          user_id: string | null;
+          status: string;
+          plan_type: string;
+          aircraft_count: number;
+          amount: number;
+          currency: string;
+          current_period_start: string;
+          current_period_end: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          stripe_subscription_id: string;
+          stripe_customer_id?: string | null;
+          air_club_id?: string | null;
+          user_id?: string | null;
+          status: string;
+          plan_type: string;
+          aircraft_count: number;
+          amount: number;
+          currency: string;
+          current_period_start: string;
+          current_period_end: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          stripe_subscription_id?: string;
+          stripe_customer_id?: string | null;
+          air_club_id?: string | null;
+          user_id?: string | null;
+          status?: string;
+          plan_type?: string;
+          aircraft_count?: number;
+          amount?: number;
+          currency?: string;
+          current_period_start?: string;
+          current_period_end?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       bookings: {
         Row: {
           id: string;

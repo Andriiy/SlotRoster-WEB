@@ -216,11 +216,11 @@ export default function ClubPage() {
           </div>
           <div className="flex gap-2 pt-4">
             <Button variant="outline" asChild>
-              <a href="/dashboard/products">Change Plan</a>
+              <a href="/dashboard/stripe">Change Plan</a>
             </Button>
             {selectedAirClub.is_trial_active && (
               <Button variant="outline" asChild>
-                <a href="/dashboard/products">Upgrade Now</a>
+                <a href="/dashboard/stripe">Upgrade Now</a>
               </Button>
             )}
           </div>
