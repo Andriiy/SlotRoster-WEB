@@ -162,7 +162,15 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => signInWithGoogle()}
+              onClick={async () => {
+                try {
+                  console.log('Starting Google OAuth...');
+                  await signInWithGoogle();
+                } catch (error) {
+                  console.error('Google OAuth error:', error);
+                  alert(`Google OAuth failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }}
               className="w-full h-11 border-2 border-gray-200 hover:bg-gray-50"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
