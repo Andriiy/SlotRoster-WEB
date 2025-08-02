@@ -363,11 +363,15 @@ export async function signInWithGoogle() {
   try {
     const supabase = await createClient();
     
-    // Get the correct site URL for production with fallback
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com';
+    // Use localhost for local development, production URL for production
+    // For server actions, we need to check the environment
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const siteUrl = isDevelopment ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
     const redirectUrl = `${siteUrl}/auth/callback`;
     
     console.log('Initiating Google OAuth with redirect:', redirectUrl);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Site URL:', siteUrl);
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

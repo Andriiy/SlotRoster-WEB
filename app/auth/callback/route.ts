@@ -65,11 +65,17 @@ export async function GET(request: NextRequest) {
 
     if (!airClub) {
       console.log('No air club found for user, redirecting to setup');
-      return NextResponse.redirect(new URL('/setup', request.url));
+      // Use localhost for local development, production URL for production
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const baseUrl = isDevelopment ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
+      return NextResponse.redirect(new URL('/setup', baseUrl));
     }
 
     console.log('OAuth flow completed successfully, redirecting to:', next);
-    return NextResponse.redirect(new URL(next, request.url));
+    // Use localhost for local development, production URL for production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const baseUrl = isDevelopment ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
+    return NextResponse.redirect(new URL(next, baseUrl));
   } catch (error) {
     console.error('Unexpected error in OAuth callback:', error);
     // Return a proper error response instead of redirecting

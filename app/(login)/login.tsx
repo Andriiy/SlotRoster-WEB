@@ -195,11 +195,14 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                   console.log('Testing Google OAuth...');
                   const { supabase } = await import('@/lib/supabase/client');
                   
-                  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com';
+                  // Use localhost for local development, production URL for production
+                  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                  const siteUrl = isLocalhost ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
                   const redirectUrl = `${siteUrl}/auth/callback`;
                   
                   console.log('Redirect URL:', redirectUrl);
                   console.log('Site URL env:', process.env.NEXT_PUBLIC_SITE_URL);
+                  console.log('Is localhost:', isLocalhost);
                   
                   const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
