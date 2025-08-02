@@ -165,7 +165,38 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               onClick={async () => {
                 try {
                   console.log('Starting Google OAuth...');
-                  await signInWithGoogle();
+                  const { supabase } = await import('@/lib/supabase/client');
+                  
+                  // Use localhost for local development, production URL for production
+                  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                  const siteUrl = isLocalhost ? 'http://localhost:3000' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://slotroster.com');
+                  const redirectUrl = `${siteUrl}/auth/callback`;
+                  
+                  console.log('Redirect URL:', redirectUrl);
+                  console.log('Site URL env:', process.env.NEXT_PUBLIC_SITE_URL);
+                  console.log('Is localhost:', isLocalhost);
+                  
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: redirectUrl,
+                      queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                      }
+                    }
+                  });
+                  
+                  console.log('OAuth result:', { data, error });
+                  
+                  if (error) {
+                    console.error('Google OAuth error:', error);
+                    alert(`Google OAuth failed: ${error.message}`);
+                  } else if (data?.url) {
+                    window.location.href = data.url;
+                  } else {
+                    alert('No OAuth URL received');
+                  }
                 } catch (error) {
                   console.error('Google OAuth error:', error);
                   alert(`Google OAuth failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
