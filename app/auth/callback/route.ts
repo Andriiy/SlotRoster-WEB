@@ -53,44 +53,8 @@ export async function GET(request: NextRequest) {
 
     console.log('OAuth user authenticated:', data.user.id);
 
-    // Check if user profile exists
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
-
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error checking profile for OAuth user:', profileError);
-      const errorUrl = new URL('/sign-in', request.url);
-      errorUrl.searchParams.set('error', 'profile_error');
-      errorUrl.searchParams.set('description', profileError.message);
-      return NextResponse.redirect(errorUrl);
-    }
-
-    if (!profile) {
-      console.log('Creating profile for OAuth user:', data.user.id);
-      // Create profile for OAuth user - only insert existing columns
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: data.user.id,
-          email: data.user.email,
-          full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-          name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-          is_admin: false,
-          is_pilot: false,
-          is_instructor: false
-        });
-
-      if (insertError) {
-        console.error('Error creating profile for OAuth user:', insertError);
-        const errorUrl = new URL('/sign-in', request.url);
-        errorUrl.searchParams.set('error', 'profile_creation_error');
-        errorUrl.searchParams.set('description', insertError.message);
-        return NextResponse.redirect(errorUrl);
-      }
-    }
+    // OAuth authentication is complete - auth.users is automatically created by Supabase
+    // No need to manually create profiles or use any other tables for authentication
 
     // Check if user has an air club
     const { data: airClub } = await supabase
