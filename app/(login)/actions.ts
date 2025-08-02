@@ -361,6 +361,12 @@ export async function deleteAccount(formData: FormData) {
 // Google OAuth sign in
 export async function signInWithGoogle() {
   try {
+    // Check if environment variables are set
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Missing Supabase environment variables');
+      throw new Error('Supabase configuration is missing. Please check your environment variables.');
+    }
+
     const supabase = await createClient();
     
     // Use localhost for local development, production URL for production
@@ -372,6 +378,8 @@ export async function signInWithGoogle() {
     console.log('Initiating Google OAuth with redirect:', redirectUrl);
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Site URL:', siteUrl);
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing');
+    console.log('Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

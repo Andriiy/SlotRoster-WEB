@@ -211,6 +211,8 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                   console.log('Redirect URL:', redirectUrl);
                   console.log('Site URL env:', process.env.NEXT_PUBLIC_SITE_URL);
                   console.log('Is localhost:', isLocalhost);
+                  console.log('Supabase URL (client):', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing');
+                  console.log('Supabase Key (client):', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
                   
                   const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
@@ -236,6 +238,25 @@ function LoginContent({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
               className="w-full h-11 border-2 border-red-200 hover:bg-red-50 text-red-600"
             >
               🔧 Debug Google OAuth
+            </Button>
+
+            {/* Temporary Environment Check Button */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                console.log('Environment Check:');
+                console.log('NODE_ENV:', process.env.NODE_ENV);
+                console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing');
+                console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+                console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
+                console.log('Current URL:', window.location.href);
+                
+                alert(`Environment Check:\nNODE_ENV: ${process.env.NODE_ENV}\nSupabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing'}\nSupabase Key: ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing'}`);
+              }}
+              className="w-full h-11 border-2 border-blue-200 hover:bg-blue-50 text-blue-600"
+            >
+              🔍 Check Environment Variables
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
