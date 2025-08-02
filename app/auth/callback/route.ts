@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     if (!profile) {
       console.log('Creating profile for OAuth user:', data.user.id);
-      // Create profile for OAuth user
+      // Create profile for OAuth user - only insert existing columns
       const { error: insertError } = await supabase
         .from('profiles')
         .insert({
@@ -78,7 +78,9 @@ export async function GET(request: NextRequest) {
           email: data.user.email,
           full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
           name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-          avatar_url: data.user.user_metadata?.avatar_url
+          is_admin: false,
+          is_pilot: false,
+          is_instructor: false
         });
 
       if (insertError) {
